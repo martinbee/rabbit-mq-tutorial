@@ -1,10 +1,11 @@
 ﻿using System;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System.Text;
 
-namespace Send
+namespace Receive
 {
-    class Send
+    class Receive
     {
         static void Main()
         {
@@ -22,22 +23,25 @@ namespace Send
                 arguments: null
               );
 
-              string message = "Hello World";
-              var body = Encoding.UTF8.GetBytes(message);
+              var consumer = new EventingBasicConsumer(channel);
 
-              channel.BasicPublish(
-                exchange: "",
-                routingKey: "hello",
-                basicProperties: null,
-                body: body
+              consumer.Received += (model, ea) =>
+              {
+                var body = ea.Body;
+                var message = Encoding.UTF8.GetString(body);
+                Console.WriteLine(" [x] Received {0}", message);
+              };
+
+              channel.BasicConsume(
+                queue: "hello",
+                autoAck: true,
+                consumer: consumer
               );
 
-              Console.WriteLine(" [x] Sent {0}", message);
+              Console.WriteLine("Press [enter] to exit.");
+              Console.ReadLine();
             }
           }
-
-            Console.WriteLine("Press [enter] to exit.");
-            Console.ReadLine();
         }
     }
 }
